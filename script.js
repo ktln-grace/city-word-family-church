@@ -1,0 +1,1 @@
+const bar=document.querySelector('.progress');addEventListener('scroll',()=>bar.style.width=(scrollY/(document.documentElement.scrollHeight-innerHeight)*100)+'%',{passive:true});const menu=document.querySelector('.menu'),links=document.querySelector('.links');menu.onclick=()=>links.classList.toggle('open');

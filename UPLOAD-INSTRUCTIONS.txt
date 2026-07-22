@@ -1,0 +1,15 @@
+CITY WORD FAMILY CHURCH — GITHUB PAGES
+
+1. Extract this ZIP.
+2. Open https://github.com/ktln-grace/city-word-family-church
+3. Click "uploading an existing file" (or Add file > Upload files).
+4. Upload index.html, styles.css, script.js, hero.png, and community.png.
+5. Commit the files to the main branch.
+6. Open Settings > Pages.
+7. Under Build and deployment, select "Deploy from a branch".
+8. Choose branch "main", folder "/ (root)", then Save.
+
+The temporary address will be:
+https://ktln-grace.github.io/city-word-family-church/
+
+You can connect a custom church domain later under Settings > Pages.
