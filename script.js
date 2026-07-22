@@ -54,5 +54,29 @@ document.querySelectorAll("form").forEach(form=>form.addEventListener("submit",e
 document.querySelectorAll(".pill,.circle-btn,.care-card button").forEach(el=>{el.classList.add("ripple-host");el.addEventListener("click",e=>{const r=document.createElement("span"),box=el.getBoundingClientRect();r.className="ripple";r.style.left=e.clientX-box.left+"px";r.style.top=e.clientY-box.top+"px";el.appendChild(r);setTimeout(()=>r.remove(),650)})});
 if(finePointer&&!reduceMotion){const cursor=body.appendChild(Object.assign(document.createElement("div"),{className:"cursor-glow"}));addEventListener("pointermove",e=>{cursor.animate({left:e.clientX+"px",top:e.clientY+"px"},{duration:350,fill:"forwards"})});document.querySelectorAll(".magnetic").forEach(el=>{el.onpointermove=e=>{const b=el.getBoundingClientRect();el.style.transform=`translate(${(e.clientX-b.left-b.width/2)*.12}px,${(e.clientY-b.top-b.height/2)*.12}px)`};el.onpointerleave=()=>el.style.transform=""})}
 
+// Seamless message marquees
+document.querySelectorAll(".ticker,.gs-marquee").forEach(marquee=>{const message=marquee.textContent.trim();marquee.setAttribute("aria-label",message.replaceAll("✦",""));marquee.innerHTML=`<div class="marquee-track" aria-hidden="true"><span>${message}</span><span>${message}</span><span>${message}</span><span>${message}</span></div>`;marquee.onmouseenter=()=>marquee.classList.add("paused");marquee.onmouseleave=()=>marquee.classList.remove("paused")});
+
+// Reusable autoplay, drag and keyboard carousel
+const carouselSelectors=[".cards",".event-grid",".impact-grid"];
+carouselSelectors.forEach(selector=>document.querySelectorAll(selector).forEach((track,trackIndex)=>{
+  const slides=[...track.children].filter(x=>!x.hidden);if(slides.length<2)return;
+  track.classList.add("carousel-track");track.tabIndex=0;track.setAttribute("role","region");track.setAttribute("aria-label","Scrollable content carousel");
+  const controls=document.createElement("div");controls.className="carousel-controls";controls.innerHTML=`<div class="carousel-count"><b>01</b><span>/ ${String(slides.length).padStart(2,"0")}</span></div><div><button aria-label="Previous slide">←</button><button aria-label="Next slide">→</button></div>`;track.after(controls);
+  let current=0,timer,drag=false,startX=0,startScroll=0;
+  const go=(index,user=false)=>{current=(index+slides.length)%slides.length;track.scrollTo({left:slides[current].offsetLeft-track.offsetLeft,behavior:reduceMotion?"auto":"smooth"});controls.querySelector("b").textContent=String(current+1).padStart(2,"0");slides.forEach((s,i)=>s.setAttribute("aria-current",String(i===current)));if(user)restart()};
+  const restart=()=>{clearInterval(timer);if(!reduceMotion)timer=setInterval(()=>go(current+1),4200+trackIndex*450)};
+  const buttons=controls.querySelectorAll("button");buttons[0].onclick=()=>go(current-1,true);buttons[1].onclick=()=>go(current+1,true);
+  track.addEventListener("keydown",e=>{if(e.key==="ArrowRight"){e.preventDefault();go(current+1,true)}if(e.key==="ArrowLeft"){e.preventDefault();go(current-1,true)}});
+  track.addEventListener("pointerdown",e=>{drag=true;startX=e.clientX;startScroll=track.scrollLeft;track.setPointerCapture(e.pointerId);track.classList.add("dragging");clearInterval(timer)});
+  track.addEventListener("pointermove",e=>{if(drag)track.scrollLeft=startScroll-(e.clientX-startX)});
+  const finish=e=>{if(!drag)return;drag=false;track.classList.remove("dragging");const nearest=slides.reduce((best,s,i)=>Math.abs((s.offsetLeft-track.offsetLeft)-track.scrollLeft)<Math.abs((slides[best].offsetLeft-track.offsetLeft)-track.scrollLeft)?i:best,0);go(nearest,true);if(e.pointerId&&track.hasPointerCapture(e.pointerId))track.releasePointerCapture(e.pointerId)};
+  track.addEventListener("pointerup",finish);track.addEventListener("pointercancel",finish);track.addEventListener("mouseenter",()=>clearInterval(timer));track.addEventListener("mouseleave",restart);track.addEventListener("focusin",()=>clearInterval(timer));track.addEventListener("focusout",restart);go(0);restart();
+}));
+
+// Animated statistics and hero depth
+document.querySelectorAll(".stats>b").forEach(stat=>{const raw=stat.childNodes[0],target=parseInt(raw.textContent,10);if(!target||reduceMotion)return;raw.textContent="0";const countObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(!entry.isIntersecting)return;const start=performance.now(),duration=1100;const draw=now=>{const p=Math.min(1,(now-start)/duration);raw.textContent=Math.round(target*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(draw)};requestAnimationFrame(draw);countObserver.disconnect()}),{threshold:.6});countObserver.observe(stat)});
+document.querySelectorAll(".hero h1,.page-hero h1,.gs-hero h1,.sermon-hero h1,.event-feature h1").forEach(h=>h.classList.add("headline-alive"));
+
 // Countdown
 const countdown=document.querySelector("[data-countdown]");if(countdown){const target=new Date(Date.now()+12*86400000+6*3600000);const draw=()=>{let d=Math.max(0,target-Date.now()),days=Math.floor(d/86400000),h=Math.floor(d/3600000)%24,m=Math.floor(d/60000)%60;countdown.innerHTML=`<b>${days}<small>DAYS</small></b><b>${h}<small>HOURS</small></b><b>${m}<small>MIN</small></b>`};draw();setInterval(draw,60000)}
